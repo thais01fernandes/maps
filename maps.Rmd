@@ -1,0 +1,494 @@
+---
+title: "Mapas"
+author: "Thais Pereira"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(reactable)
+library(geobr)
+library(jsonlite)
+library(geojsonio)
+library(dplyr)
+library(tidyverse)
+library(ggrepel)
+library(ggplot2)
+library(tidypod)
+library(showtext)
+library(readxl)
+library(here)
+library(sf)
+library(patchwork)
+
+dados <- read_excel('C:/Users/joaop/OneDrive/Documentos/Base de dados - Facilita SP Municípios.xlsx', 'Base Geral', skip=7)
+
+dados_2 <- dados %>% 
+  mutate_if(is.character, ~replace(., is.na(.), "não")) %>% 
+  janitor:: clean_names()
+
+
+
+```
+
+
+
+```{r}
+
+# Download dos Estados e Municípios: 
+
+muni_geobr <- read_municipality(code_muni= 35, year=2020) %>%  as.tibble()
+
+geo_ufs <- read_state(code_state = 35, year = 2020) %>% as.tibble()
+
+meso_ufs <- read_meso_region(year = 2020) %>% as.tibble()
+
+
+```
+
+criando os mapas
+
+```{r eval=FALSE, include=FALSE}
+
+# região central
+
+regiao_central <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "01ª Região - Central")
+
+# araçatuba
+
+
+regiao_aracatuba <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "02ª Região - Araçatuba")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_aracatuba <- st_as_sf(regiao_aracatuba)
+
+st_write(regiao_aracatuba, "regiao_aracatuba.json", driver = "GeoJSON")
+
+
+# barretos
+
+
+regiao_barretos <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "03ª Região - Barretos")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_barretos <- st_as_sf(regiao_barretos)
+
+st_write(regiao_barretos, "regiao_barretos.json", driver = "GeoJSON")
+
+
+# presidente prudente
+
+
+regiao_presidente <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "08ª Região - Presidente Prudente")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_presidente <- st_as_sf(regiao_presidente)
+
+st_write(regiao_presidente, "regiao_presidente.json", driver = "GeoJSON")
+
+
+# Itapeva
+
+
+regiao_itapeva <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "06ª Região - Itapeva")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_itapeva <- st_as_sf(regiao_itapeva)
+
+st_write(regiao_itapeva, "regiao_itapeva.json", driver = "GeoJSON")
+
+
+
+# Sorocaba
+
+
+regiao_sorocaba <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "14ª Região - Sorocaba")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_sorocaba <- st_as_sf(regiao_sorocaba)
+
+st_write(regiao_sorocaba, "regiao_sorocaba.json", driver = "GeoJSON")
+
+
+# Bauru
+
+
+regiao_bauru <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "04ª Região - Bauru")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_bauru <- st_as_sf(regiao_bauru)
+
+st_write(regiao_bauru, "regiao_bauru.json", driver = "GeoJSON")
+
+
+# Campinas
+
+
+regiao_campinas <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "13ª Região - Campinas")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_campinas <- st_as_sf(regiao_campinas)
+
+st_write(regiao_campinas, "regiao_campinas.json", driver = "GeoJSON")
+
+
+# Registro
+
+
+regiao_registro <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "09ª Região - Registro")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_registro <- st_as_sf(regiao_registro)
+
+st_write(regiao_registro, "regiao_registro.json", driver = "GeoJSON")
+
+
+# Registro
+
+
+regiao_registro <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "09ª Região - Registro")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_registro <- st_as_sf(regiao_registro)
+
+st_write(regiao_registro, "regiao_registro.json", driver = "GeoJSON")
+
+# Franca
+
+
+regiao_franca <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "05ª Região - Franca")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_franca <- st_as_sf(regiao_franca)
+
+st_write(regiao_franca, "regiao_franca.json", driver = "GeoJSON")
+
+# Marília
+
+
+regiao_marilia <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "07ª Região - Marília")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_marilia <- st_as_sf(regiao_marilia)
+
+st_write(regiao_marilia, "regiao_marilia.json", driver = "GeoJSON")
+
+
+# Ribeirão preto
+
+
+regiao_ribeirao <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "10ª Região - Ribeirão Preto")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_ribeirao <- st_as_sf(regiao_ribeirao)
+
+st_write(regiao_ribeirao, "regiao_ribeirao.json", driver = "GeoJSON")
+
+
+
+# Santos
+
+
+regiao_santos <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "15ª Região - Baixada Santista")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_santos <- st_as_sf(regiao_santos)
+
+st_write(regiao_santos, "regiao_santos.json", driver = "GeoJSON")
+
+
+# São José dos Campos
+
+
+regiao_campos <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "16ª Região - São Paulo")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_campos <- st_as_sf(regiao_campos)
+
+st_write(regiao_campos, "regiao_campos.json", driver = "GeoJSON")
+
+
+# São Paulo
+
+
+regiao_sp <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "16ª Região - São Paulo")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_sp <- st_as_sf(regiao_sp)
+
+st_write(regiao_sp, "regiao_sp.json", driver = "GeoJSON")
+
+
+# São josé
+
+
+regiao_jose <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "11ª Região - São José do Rio Preto")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_jose <- st_as_sf(regiao_jose)
+
+st_write(regiao_jose, "regiao_jose.json", driver = "GeoJSON")
+
+
+
+
+```
+
+
+
+
+```{r Mapa dos municipios, eval=FALSE, fig.align='center', include=FALSE}
+
+dados_mapa <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni")
+
+
+meso_region <- meso_ufs %>% 
+  filter(code_state == 35)
+
+meso_region$geom <- st_sfc(meso_region$geom)
+
+meso_region <- st_as_sf(meso_region)
+
+
+# Convertendo a coluna geom para um objeto sfc
+geo_ufs$geom <- st_sfc(geo_ufs$geom)
+
+# Convertendo para um objeto sf
+geo_ufs <- st_as_sf(geo_ufs)
+
+
+# Obtendo centróides dos polígonos em geo_ufs_2
+geo_ufs  <- st_centroid(geo_ufs)
+
+# Convertendo dados_mapa para um objeto sf
+dados_mapa <- st_as_sf(dados_mapa)
+
+# Obtendo centróides dos polígonos em muni_geobr_3_sf
+# dados_mapa <- st_centroid(dados_mapa)
+
+# Plotando o mapa
+ggplot() +
+  geom_sf(data = geo_ufs) +
+  geom_sf(data = meso_region, fill = NA, color = "black", size = 1.5) +  # Adiciona contorno mais escuro
+  geom_sf(data =  dados_mapa, aes(fill = as.character(adesao_formal))) +  
+  theme_light() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim")) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "top")
+
+
+
+
+
+```
+
+```{r out.width = "300%", dpi=300}
+
+# São josé
+
+
+regiao_jose <- dados_2 %>% 
+  select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao_2 == "11ª Região - São José do Rio Preto")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_jose <- st_as_sf(regiao_jose)
+
+# regiao são josé do rio preto
+
+mapa_2 <- ggplot() +
+  geom_sf(data = regiao_jose, aes(fill = as.character(adesao_formal))) +
+  theme_minimal() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = regiao_jose, aes(label = name_muni), 
+               size = 8, fontface = "bold", color = "black") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+
+ # Salvar o gráfico mapa_1 como um arquivo PNG
+  ggsave("mapa_2.png", plot = mapa_1, units = "in", dpi = 300)
+
+
+```
+
+
+```{r}
+
+mapa_4 <- ggplot() +
+  geom_sf(data = regiao_jose, aes(fill = as.character(adesao_formal))) +
+  ggthemes::theme_map() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "darkgray"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = regiao_jose, aes(label = name_muni), 
+               size = 1, fontface = "bold", color = "black", expand = TRUE) +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+ggsave("mapa_4.png", plot = mapa_4, width = 8, height = 6,units = "in", dpi = 300)
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
