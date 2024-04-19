@@ -223,6 +223,46 @@ mapa_sp <- ggplot() +
 ```
 
 
+```{r}
+
+# Metropolitana
+
+
+regiao_jose <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao == "11ª Região - São José do Rio Preto")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_jose <- st_as_sf(regiao_jose)
+
+# regiao são josé do rio preto
+
+mapa_jose <- ggplot() +
+  geom_sf(data = regiao_jose, aes(fill = as.character(adesao_formal))) +
+  theme_void() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = regiao_jose, aes(label = name_muni), 
+               size = 2, fontface = "bold", color = "black") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+
+ # Salvar o gráfico mapa_1 como um arquivo PNG
+  ggsave("mapa_jose.png", plot = mapa_jose, width = 10, height = 8, units = "in", dpi = 300)
+
+
+
+```
 
 
 
