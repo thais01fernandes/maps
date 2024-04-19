@@ -20,18 +20,15 @@ library(dplyr)
 library(tidyverse)
 library(ggrepel)
 library(ggplot2)
-library(tidypod)
 library(showtext)
 library(readxl)
 library(here)
 library(sf)
 library(patchwork)
+library(lubridate)
 
-dados <- read_excel('C:/Users/joaop/OneDrive/Documentos/Base de dados - Facilita SP Municípios.xlsx', 'Base Geral', skip=7)
-
-dados_2 <- dados %>% 
-  mutate_if(is.character, ~replace(., is.na(.), "não")) %>% 
-  janitor:: clean_names()
+dados <- read_excel('C:/Users/thais.pereira/OneDrive - PRODESP/Facilita sp/Base de dados - Facilita SP Municípios.xlsx', 'Base Geral', skip=7) %>% 
+  janitor::clean_names()
 
 
 
@@ -51,6 +48,7 @@ meso_ufs <- read_meso_region(year = 2020) %>% as.tibble()
 
 
 ```
+
 
 criando os mapas
 
@@ -301,7 +299,7 @@ st_write(regiao_santos, "regiao_santos.json", driver = "GeoJSON")
 # São José dos Campos
 
 
-regiao_campos <- dados_2 %>% 
+regiao_campos <- dados %>% 
   select(regiao_2, municipio, cod_ibge, adesao_formal) %>% 
   rename(code_muni = cod_ibge) %>% 
   left_join(muni_geobr, by = "code_muni") %>% 

@@ -1,0 +1,229 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(reactable)
+library(geobr)
+library(jsonlite)
+library(geojsonio)
+library(dplyr)
+library(tidyverse)
+library(ggrepel)
+library(ggplot2)
+library(showtext)
+library(readxl)
+library(here)
+library(sf)
+library(patchwork)
+library(lubridate)
+
+dados <- read_excel('C:/Users/thais.pereira/OneDrive - PRODESP/Facilita sp/Base de dados - Facilita SP Municípios.xlsx', 'Base Geral', skip=7) %>% 
+  janitor::clean_names() %>% 
+  mutate_if(is.character, ~replace(., is.na(.), "não"))
+  
+
+
+
+```
+
+
+```{r}
+
+# Download dos Estados e Municípios: 
+
+muni_geobr <- read_municipality(code_muni= 35, year=2020) %>%  as.tibble()
+
+geo_ufs <- read_state(code_state = 35, year = 2020) %>% as.tibble()
+
+meso_ufs <- read_meso_region(year = 2020) %>% as.tibble()
+
+
+```
+
+
+```{r}
+
+# São José dos Campos
+
+
+regiao_campos <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao == "12ª Região - São José dos Campos")
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_campos <- st_as_sf(regiao_campos)
+
+# regiao são josé do rio preto
+
+mapa_campos <- ggplot() +
+  geom_sf(data = regiao_campos, aes(fill = as.character(adesao_formal))) +
+  theme_void() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = regiao_campos, aes(label = name_muni), 
+               size = 1.8, fontface = "bold", color = "black") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+
+ # Salvar o gráfico mapa_1 como um arquivo PNG
+  ggsave("mapa_campos.png", plot = mapa_campos, width = 10, height = 8, units = "in", dpi = 300)
+
+
+
+
+```
+
+
+
+```{r}
+
+
+# Campinas
+
+
+regiao_campinas <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao == "13ª Região - Campinas")
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_campinas <- st_as_sf(regiao_campinas)
+
+# regiao são josé do rio preto
+
+mapa_campinas <- ggplot() +
+  geom_sf(data = regiao_campinas, aes(fill = as.character(adesao_formal))) +
+  theme_void() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = regiao_campinas, aes(label = name_muni), 
+               size = 1.8, fontface = "bold", color = "black") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+
+ # Salvar o gráfico mapa_1 como um arquivo PNG
+  ggsave("mapa_campinas.png", plot = mapa_campinas, width = 10, height = 8, units = "in", dpi = 300)
+
+
+
+
+
+```
+
+
+
+```{r}
+
+# Santos
+
+
+regiao_santos <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao == "15ª Região - Baixada Santista")
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_santos <- st_as_sf(regiao_santos)
+
+# regiao são josé do rio preto
+
+mapa_santos <- ggplot() +
+  geom_sf(data = regiao_santos, aes(fill = as.character(adesao_formal))) +
+  theme_void() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = regiao_santos, aes(label = name_muni), 
+               size = 3, fontface = "bold", color = "black") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+
+ # Salvar o gráfico mapa_1 como um arquivo PNG
+  ggsave("mapa_santos.png", plot = mapa_santos, width = 10, height = 8, units = "in", dpi = 300)
+
+
+
+
+
+
+```
+
+
+
+```{r}
+
+
+# Metropolitana
+
+
+regiao_sp <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao == "16ª Região - São Paulo")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_sp <- st_as_sf(regiao_sp)
+
+# regiao são josé do rio preto
+
+mapa_sp <- ggplot() +
+  geom_sf(data = regiao_sp, aes(fill = as.character(adesao_formal))) +
+  theme_void() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = regiao_sp, aes(label = name_muni), 
+               size = 2, fontface = "bold", color = "black") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+
+ # Salvar o gráfico mapa_1 como um arquivo PNG
+  ggsave("mapa_sp.png", plot = mapa_sp, width = 10, height = 8, units = "in", dpi = 300)
+
+```
+
+
+
+
+
+
