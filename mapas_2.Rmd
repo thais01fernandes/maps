@@ -30,8 +30,8 @@ dados <- read_excel('C:/Users/thais.pereira/OneDrive - PRODESP/Facilita sp/Base 
   janitor::clean_names() %>% 
   mutate_if(is.character, ~replace(., is.na(.), "não"))
   
-
-
+# dados %>% 
+#   filter(adesao_formal == "SIM")
 
 ```
 
@@ -72,7 +72,7 @@ mapa_campos <- ggplot() +
   theme_void() +
   scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
   geom_sf_text(data = regiao_campos, aes(label = name_muni), 
-               size = 1.8, fontface = "bold", color = "black") +
+               size = 2, fontface = "bold", color = "black") +
   theme(axis.text.x = element_blank(),
         axis.text.y = element_blank(),
         axis.title.x = element_blank(),
@@ -158,7 +158,7 @@ regiao_santos <- st_as_sf(regiao_santos)
 mapa_santos <- ggplot() +
   geom_sf(data = regiao_santos, aes(fill = as.character(adesao_formal))) +
   theme_void() +
-  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "darkgray"), labels = c("Não", "Sim"))  +
   geom_sf_text(data = regiao_santos, aes(label = name_muni), 
                size = 3, fontface = "bold", color = "black") +
   theme(axis.text.x = element_blank(),
@@ -205,7 +205,7 @@ regiao_sp <- st_as_sf(regiao_sp)
 mapa_sp <- ggplot() +
   geom_sf(data = regiao_sp, aes(fill = as.character(adesao_formal))) +
   theme_void() +
-  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "darkgray"), labels = c("Não", "Sim"))  +
   geom_sf_text(data = regiao_sp, aes(label = name_muni), 
                size = 2, fontface = "bold", color = "black") +
   theme(axis.text.x = element_blank(),
@@ -225,7 +225,6 @@ mapa_sp <- ggplot() +
 
 ```{r}
 
-# Metropolitana
 
 
 regiao_jose <- dados %>% 
@@ -263,6 +262,167 @@ mapa_jose <- ggplot() +
 
 
 ```
+
+
+
+```{r}
+
+
+regiao_marilia <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(regiao == "07ª Região - Marília")
+
+
+
+# Convertendo dados_mapa para um objeto sf
+
+regiao_marilia <- st_as_sf(regiao_marilia)
+
+# regiao marilia
+
+mapa_marilia <- ggplot() +
+  geom_sf(data = regiao_marilia, aes(fill = as.character(adesao_formal))) +
+  theme_void() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = regiao_marilia, aes(label = name_muni), 
+               size = 2.5, fontface = "bold", color = "black") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+
+ # Salvar o gráfico mapa_1 como um arquivo PNG
+  ggsave("mapa_marilia.png", plot = mapa_marilia, width = 10, height = 8, units = "in", dpi = 300)
+
+
+
+```
+
+
+
+
+```{r}
+
+dados_1 <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni")
+
+nome_sem_adesao <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(adesao_formal == "não")
+
+  
+
+
+# Convertendo dados_mapa para um objeto sf
+
+dados_2 <- st_as_sf(dados_1)
+nome_sem_adesao_2 <- st_as_sf(nome_sem_adesao)
+
+
+geral_sem_adesao <- ggplot() +
+  geom_sf(data = dados_2, aes(fill = as.character(adesao_formal))) +
+  theme_void() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = nome_sem_adesao_2, aes(label = name_muni), 
+               size = 1.2, fontface = "bold", color = "black") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+ # Salvar o gráfico mapa_1 como um arquivo PNG
+
+  ggsave("geral_sem_adesao.png", plot = geral_sem_adesao, width = 10, height = 8, units = "in", dpi = 300)
+
+```
+
+
+
+```{r}
+
+dados_1 <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni")
+
+nome_sem_adesao <- dados %>% 
+  select(regiao, municipio, cod_ibge, adesao_formal) %>% 
+  rename(code_muni = cod_ibge) %>% 
+  left_join(muni_geobr, by = "code_muni") %>% 
+  filter(adesao_formal == "não")
+
+  
+
+# Convertendo dados_mapa para um objeto sf
+
+dados_2 <- st_as_sf(dados_1)
+nome_sem_adesao_2 <- st_as_sf(nome_sem_adesao)
+
+
+geral_sem_adesao <- ggplot() +
+  geom_sf(data = dados_2, aes(fill = as.character(adesao_formal))) +
+  theme_void() +
+  scale_fill_manual(name = "Aderiu?", values = c("#dfdfdf", "#dd4a32"), labels = c("Não", "Sim"))  +
+  geom_sf_text(data = nome_sem_adesao_2, aes(label = name_muni), 
+                size = 1.2, fontface = "bold", color = "black") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    legend.text = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.title = element_text(family = "serif", size = 12, hjust = 0.5, colour = "black"),
+    legend.position  = "none")
+
+ # Salvar o gráfico mapa_1 como um arquivo PNG
+
+  ggsave("geral_sem_adesao.png", plot = geral_sem_adesao, width = 10, height = 8, units = "in", dpi = 300)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

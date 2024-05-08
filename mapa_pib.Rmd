@@ -1,0 +1,68 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+
+
+library(geobr)
+library(sf)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(MetBrewer)
+library(showtext)
+
+dados <- read_excel('C:/Users/thais.pereira/OneDrive - PRODESP/Facilita sp/PIB dos Municípios - base de dados 2010-2021.xlsx', 'dados')
+
+```
+
+
+
+```{r}
+
+# Color palette
+cores = met.brewer("Hiroshige", 20)[c(1, 8, 15, 20)]
+
+```
+
+
+
+
+```{r}
+
+# Import city shapefile
+munis <- read_municipality(year = 2022, showProgress = FALSE)
+# Import state shapefile
+geostate <- read_state(showProgress = FALSE)
+
+# Import city data from Brazil (see data/raw/R/painel_municipios.R)
+panel <- readr::read_csv(here::here("static/data", "cities_brazil.csv"))
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
