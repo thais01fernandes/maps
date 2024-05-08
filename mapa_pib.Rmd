@@ -14,8 +14,24 @@ library(tidyr)
 library(stringr)
 library(MetBrewer)
 library(showtext)
+library(readxl)
+library(reactable)
+library(geobr)
+library(jsonlite)
+library(geojsonio)
+library(tidyverse)
+library(ggrepel)
+library(here)
+library(sf)
+library(patchwork)
+library(lubridate)
+library(MoMAColors)
 
-dados <- read_excel('C:/Users/thais.pereira/OneDrive - PRODESP/Facilita sp/PIB dos Municípios - base de dados 2010-2021.xlsx', 'dados')
+
+# install.packages("devtools")
+devtools::install_github("BlakeRMills/MoMAColors")
+
+panel <- read_excel('C:/Users/thais.pereira/OneDrive - PRODESP/Facilita sp/PIB dos Municípios - base de dados 2010-2021.xlsx')
 
 ```
 
@@ -24,7 +40,14 @@ dados <- read_excel('C:/Users/thais.pereira/OneDrive - PRODESP/Facilita sp/PIB d
 ```{r}
 
 # Color palette
-cores = met.brewer("Hiroshige", 20)[c(1, 8, 15, 20)]
+cores = met.brewer("Kandinsky", 20)[c(1, 8, 15, 20)]
+
+# cores = moma.colors("Picasso")
+
+font_paths("C:/Users/thais.pereira/OneDrive - PRODESP/Facilita sp/Rubik/static")
+# Import Gill Sans locally
+font_add(family = "Rubik" , regular = "Rubik-Light.ttf")
+showtext_auto()
 
 ```
 
@@ -33,18 +56,298 @@ cores = met.brewer("Hiroshige", 20)[c(1, 8, 15, 20)]
 
 ```{r}
 
-# Import city shapefile
-munis <- read_municipality(year = 2022, showProgress = FALSE)
-# Import state shapefile
-geostate <- read_state(showProgress = FALSE)
+munis <- read_municipality(code_muni= 35, year=2020) %>%  as.tibble()
 
-# Import city data from Brazil (see data/raw/R/painel_municipios.R)
-panel <- readr::read_csv(here::here("static/data", "cities_brazil.csv"))
+geostate <- read_state(code_state = 35, year = 2020) %>% as.tibble()
+
+```
+
+
+
+```{r}
+
+pib_cols <- c("pib_agriculture", "pib_industrial", "pib_services",
+             "pib_govmt_services")
+
+pib_share <- panel |>  
+  filter(Ano == 2021 & `Sigla da Unidade da Federação` == "SP") |>  
+  select(-2:-5, -9:-32, -37, -38, -40) |>  janitor::clean_names() |> 
+  rename("code_muni" = "codigo_do_municipio", 
+         "pib_agriculture" = "valor_adicionado_bruto_da_agropecuaria_a_precos_correntes_r_1_000",
+         "pib_industrial" = "valor_adicionado_bruto_da_industria_a_precos_correntes_r_1_000",
+         "pib_services" =  "valor_adicionado_bruto_dos_servicos_a_precos_correntes_exceto_administracao_defesa_educacao_e_saude_publicas_e_seguridade_social_r_1_000",
+         "pib_govmt_services" =  "valor_adicionado_bruto_da_administracao_defesa_educacao_e_saude_publicas_e_seguridade_social_a_precos_correntes_r_1_000", 
+         "pib" = "produto_interno_bruto_a_precos_correntes_r_1_000") |>  
+  select(all_of(c("code_muni", "pib", pib_cols))) |> 
+  pivot_longer(cols = 3:last_col(), names_to = "sector", values_to = "total") |> 
+  mutate(
+    share = total / pib * 100,
+    # Improve text labels
+    sector_label = str_remove(sector, "pib_"),
+    sector_label = str_to_title(sector_label),
+    sector_label = str_replace(sector_label, "Govmt_services", "Government"),
+    sector_label = str_replace(sector_label, "Industrial", "Industry")
+    )
+
+
+# Convert to wider
+tab_pib_share <- pib_share |> 
+  pivot_wider(
+    id_cols = "code_muni",
+    names_from = "sector",
+    values_from = "share"
+    )         
+
+        
+# Find the most relevant economic sector by city
+top_pib_share <- pib_share |> 
+  filter(share == max(share), .by = "code_muni") |> 
+  select(code_muni, top_sector = sector_label)
+         
+# Join tabular data with city shapefile
+map_share <- munis |> 
+  left_join(tab_pib_share, by = "code_muni") |> 
+  left_join(top_pib_share, by = "code_muni")  
+  
+
+```
+
+
+```{r}
+
+geostate <- st_as_sf(geostate)
+map_share <- st_as_sf(map_share)
+
+# Map
+
+map_1 <- ggplot() +
+  # State borders
+  geom_sf(data = geostate, lwd = 0.3, color = "gray30", fill = "white") +
+  # City colors
+  geom_sf(
+    data = na.omit(map_share),
+    aes(fill = top_sector),
+    lwd = 0.01,
+    color = "gray"
+    ) +
+# coord_sf(xlim = c(NA, -36.25))+
+  # Use Hiroshige colors
+  scale_fill_manual(name = "", values = cores) +
+  labs(
+    title = "Contribuição do PIB por Cidade",
+    subtitle = "As cores representam a àrea econômica mais relevante em cada cidade",
+    caption = "Source: National Accounts, IBGE (2021)") +
+  ggthemes::theme_map(base_family = "Rubik") +
+  # Thematic elements
+  theme(
+    # Background
+    panel.background = element_rect(fill = "#ffffff", color = NA),
+    plot.background = element_rect(fill = "#ffffff", color = NA),
+    # Legend
+    legend.position = "none",
+    legend.justification = 0.5,
+    # legend.key.size = unit(1, "cm"),
+    # legend.key.width = unit(1.5, "cm"),
+    legend.text =  element_text(size = 10, family = "Rubik"),
+   # legend.margin = margin(),
+    # Labels (title, subtitle)
+    plot.title = element_text(size = 18, hjust = 0.5),
+    plot.subtitle = element_text(size = 11, hjust = 0.5),
+    # Plot margins
+   # plot.margin = margin(10, 5, 5, 10)
+  )
+
+
 
 
 ```
 
 
+```{r}
+
+# Histogram
+
+barrinhas <- top_pib_share %>% 
+  group_by(top_sector) %>% 
+  tally() %>% 
+  mutate(pct = n/sum(n)) %>% 
+  ggplot() +
+  geom_col(aes(x = reorder(top_sector, pct), y =  pct, fill = top_sector)) + 
+  theme_void()+
+  coord_flip()+
+  theme( axis.text.y=element_text(size = 8, family = "Rubik"),
+        legend.position = "none")+
+  scale_fill_manual(name = "", values = cores) +
+  geom_text(
+    aes(x = top_sector, y =  pct, label = scales::percent(pct, accuracy = 1)),
+    size = 3,
+    hjust = 1.2,
+    vjust = 0.5,
+    family = "Rubik",
+    color = "white", 
+    fontface = "bold")
+
+
+  
+
+
+
+
+```
+
+
+```{r}
+
+map_1 + inset_element(barrinhas, left = -0.15, bottom = -0.05, right = 0.35, top =  0.3)
+
+
+```
+
+
+# mapa sem gráfico
+
+```{r}
+
+geostate <- st_as_sf(geostate)
+map_share <- st_as_sf(map_share)
+
+mapa <- ggplot() +
+  # State borders
+  geom_sf(data = geostate, lwd = 0.3, color = "gray30", fill = "white") +
+  # City colors
+  geom_sf(
+    data = na.omit(map_share),
+    aes(fill = top_sector),
+    lwd = 0.01,
+    color = "gray90"
+    ) +
+#coord_sf(xlim = c(NA, -34.469802))+
+  # Use Hiroshige colors
+  scale_fill_manual(name = "", values = cores) +
+  labs(
+    title = "Contribuição do PIB por Cidade",
+    subtitle = "As cores representam a àrea econômica mais relevante em cada cidade",
+    caption = "Source: National Accounts, IBGE (2021)") +
+  ggthemes::theme_map(base_family = "Rubik") +
+  # Thematic elements
+  theme(
+    # Background
+    panel.background = element_rect(fill = "#ffffff", color = NA),
+    plot.background = element_rect(fill = "#ffffff", color = NA),
+    # Legend
+    legend.position = "left",
+    legend.justification = 0.5,
+    # legend.key.size = unit(1, "cm"),
+    # legend.key.width = unit(1.5, "cm"),
+    legend.text =  element_text(size = 18, family = "Rubik"),
+   # legend.margin = margin(),
+    # Labels (title, subtitle)
+    plot.title = element_text(size = 45, hjust = 0.5),
+    plot.subtitle = element_text(size = 20, hjust = 0.5),
+   plot.caption = element_text(size = 15, hjust = 1)
+    # Plot margins
+   # plot.margin = margin(10, 5, 5, 10)
+  )
+
+ggsave("mapa.png", plot = mapa, width = 6, height = 4, units = "in", dpi = 300)
+
+
+```
+
+
+
+# mapa com gráfico resolução melhorada
+
+```{r}
+
+mapa_final <- map_1 + inset_element(barrinhas, left = -0.05, bottom = -0.05, right = 0.40, top =  0.3)
+
+ggsave("mapa_final.png", plot = mapa_final, width = 4, height = 2, units = "in", dpi = 300)
+
+
+```
+
+
+# mapa pra postar: 
+
+
+```{r}
+
+
+geostate <- st_as_sf(geostate)
+map_share <- st_as_sf(map_share)
+
+# Map
+
+map_1 <- ggplot() +
+  # State borders
+  geom_sf(data = geostate, lwd = 0.3, color = "gray30", fill = "white") +
+  # City colors
+  geom_sf(
+    data = na.omit(map_share),
+    aes(fill = top_sector),
+    lwd = 0.01,
+    color = "gray"
+    ) +
+# coord_sf(xlim = c(NA, -36.25))+
+  # Use Hiroshige colors
+  scale_fill_manual(name = "", values = cores) +
+  labs(
+    title = "Contribuição do PIB por Cidade",
+    subtitle = "As cores representam a àrea econômica mais relevante em cada cidade",
+    caption = "Source: National Accounts, IBGE (2021)") +
+  ggthemes::theme_map(base_family = "Rubik") +
+  # Thematic elements
+  theme(
+    # Background
+    panel.background = element_rect(fill = "#ffffff", color = NA),
+    plot.background = element_rect(fill = "#ffffff", color = NA),
+    # Legend
+    legend.position = "none",
+    legend.justification = 0.5,
+    # legend.key.size = unit(1, "cm"),
+    # legend.key.width = unit(1.5, "cm"),
+  #  legend.text =  element_text(size = 20, family = "Rubik"),
+   # legend.margin = margin(),
+    # Labels (title, subtitle)
+    plot.title = element_text(size = 45, hjust = 0.5),
+    plot.subtitle = element_text(size = 20, hjust = 0.5),
+    plot.caption = element_text(size = 14, hjust = 0.5)
+    # Plot margins
+   # plot.margin = margin(10, 5, 5, 10)
+  )
+
+
+# Histogram
+
+barrinhas <- top_pib_share %>% 
+  group_by(top_sector) %>% 
+  tally() %>% 
+  mutate(pct = n/sum(n)) %>% 
+  ggplot() +
+  geom_col(aes(x = reorder(top_sector, pct), y =  pct, fill = top_sector)) + 
+  theme_void()+
+  coord_flip()+
+  theme( axis.text.y=element_text(size = 14, family = "Rubik"),
+        legend.position = "none")+
+  scale_fill_manual(name = "", values = cores) +
+  geom_text(
+    aes(x = top_sector, y =  pct, label = scales::percent(pct, accuracy = 1)),
+    size = 5,
+    hjust = 1.2,
+    vjust = 0.10,
+    family = "Rubik",
+    color = "white", 
+    fontface = "bold")
+
+
+
+mapa_final <- map_1 + inset_element(barrinhas, left = -0.010, bottom = -0.05, right = 0.35, top =  0.3)
+
+ggsave("mapa_final.png", plot = mapa_final, width = 6, height = 4, units = "in", dpi = 300)
+
+
+```
 
 
 
