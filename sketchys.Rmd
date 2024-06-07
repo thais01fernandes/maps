@@ -1,0 +1,235 @@
+---
+title: "sketchs"
+output: html_document
+date: "2024-06-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("tidyverse")
+library("sf")
+```
+
+```{r eval=FALSE, include=FALSE}
+
+library("tidyverse")
+library("sf")
+ger <- rnaturalearth::ne_countries(scale = 50, returnclass = "sf", continent = "South America")
+ger <- st_cast(ger, "POLYGON")
+ger$fill <- "#CD2626"
+ger$stroke <- 2
+ger$fillweight <- 0.5
+
+# MULTIPOLYGON (and also MULTILINESTRING) are not supported
+ger <- st_cast(ger, "POLYGON")
+cities <- data.frame(name = c("São Paulo", "Rio de Janeiro", "Brazilia", "Belo Horizonte"))
+cities$geometry <- st_sfc(
+    st_point(c(-46.633308, -23.560520)), st_point(c(-43.172896, -22.896847)),
+    st_point(c(-47.882166, -15.794229)), st_point(c(-43.934493, -19.916681))
+)
+cities <- st_sf(cities)
+st_crs(cities) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+cities$size <- 15
+cities$color <- "#000000"
+cities$label <- cities$name
+cities$label_pos <- "e"
+
+roughsf::roughsf(list(ger, cities),
+    title = "Sketchy Map of Brazil", caption = "drawn by @thais_fernandes",
+    title_font = "48px Pristina", font = "20px Pristina", caption_font = "25px Pristina",
+    roughness = 1, bowing = 1, simplification = 1,
+    width = 800, height = 1000,
+)
+
+
+
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
+
+
+
+library("tidyverse")
+library("sf")
+ger <- rnaturalearth::ne_countries(scale = 50, returnclass = "sf", continent = "South America") 
+ger <- st_cast(ger, "POLYGON")
+ger$fill <- c('#102E3C')
+ger$stroke <- 2
+ger$fillweight <- 0.5
+
+# MULTIPOLYGON (and also MULTILINESTRING) are not supported
+ger <- st_cast(ger, "POLYGON")
+cities <- data.frame(name = c("Brazil"))
+cities$geometry <- st_sfc(
+   
+    st_point(c(-47.882166, -15.794229))
+)
+cities <- st_sf(cities)
+st_crs(cities) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+cities$size <- 15
+cities$color <- "#000000"
+cities$label <- cities$name
+cities$label_pos <- "e"
+
+roughsf::roughsf(list(ger, cities),
+    title = "Sketchy Map of Latin América", caption = "drawn by @thais_fernandes",
+    title_font = "48px Pristina", font = "30px Pristina", caption_font = "25px Pristina",
+    roughness = 1, bowing = 1, simplification = 1,
+    width = 800, height = 800,
+     
+    )
+
+
+
+```
+
+
+
+```{r}
+
+library(geobr)
+
+# Download dos Estados e Municípios: 
+
+muni_geobr <- read_municipality(code_muni= 35, year=2020) %>%  as.tibble()
+
+geo_ufs <- read_state(code_state = 35, year = 2020) %>% as.tibble()
+
+meso_ufs <- read_meso_region(year = 2020) %>% as.tibble()
+
+
+```
+
+
+
+```{r echo=FALSE}
+
+library(tidyverse)
+library(sf)
+library(roughsf)
+library(pagedown)
+
+
+# Convertendo dados_mapa para um objeto sf
+
+muni <- st_as_sf(muni_geobr)
+
+# Obtendo centróides dos polígonos em geo_ufs_2
+muni_2  <- st_centroid(muni)
+
+library("tidyverse")
+library("sf")
+#ger <- rnaturalearth::ne_countries(scale = 50, returnclass = "sf", continent = "South America") 
+ger <- st_cast(muni, "POLYGON")
+ger$fill <- c('#102E3C')
+ger$stroke <- 0.5
+ger$fillweight <- 0.5
+
+# MULTIPOLYGON (and also MULTILINESTRING) are not supported
+ger <- st_cast(ger, "POLYGON")
+# cities <- data.frame(name = c("Brazil"))
+# cities$geometry <- st_sfc(
+#    
+#     st_point(c(-47.882166, -15.794229))
+# )
+# cities <- st_sf(cities)
+# st_crs(cities) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+# cities$size <- 15
+# cities$color <- "#000000"
+# cities$label <- cities$name
+# cities$label_pos <- "e"
+
+roughsf::roughsf(ger,
+    title = "Sketchy Map of São Paulo", caption = "drawn by @thais_fernandes",
+    title_font = "20px Pristina", font = "30px Pristina", caption_font = "15px Pristina",
+    roughness = 2, bowing = 1, simplification = 2,
+    width = 800, height = 500,
+     
+    )
+
+# roughsf::save_roughsf(
+#   rsf = map_sp_sketchy,
+#   file = "map_sp_sketchy.png",
+#   background = "#fcfdff"
+# )
+
+
+
+```
+
+
+
+
+
+```{r eval=FALSE, include=FALSE}
+
+library(MoMAColors)
+cores = met.brewer("Kandinsky", 1034)
+
+geo_ufs <- read_state(year = 2020) %>% as.tibble()
+# Convertendo dados_mapa para um objeto sf
+
+geo_ufs_1  <- st_as_sf(geo_ufs)
+
+# Obtendo centróides dos polígonos em geo_ufs_2
+geo_ufs_2  <- st_centroid(geo_ufs_1)
+
+library("tidyverse")
+library("sf")
+#ger <- rnaturalearth::ne_countries(scale = 50, returnclass = "sf", continent = "South America") 
+ger <- st_cast(geo_ufs_1, "POLYGON")
+ger$fill <- c('#bca297')
+ger$stroke <- 1.5
+ger$fillweight <- 2
+
+# MULTIPOLYGON (and also MULTILINESTRING) are not supported
+ger <- st_cast(ger, "POLYGON")
+# cities <- data.frame(name = c("Brazil"))
+# cities$geometry <- st_sfc(
+#    
+#     st_point(c(-47.882166, -15.794229))
+# )
+cities <- st_sf(cities)
+st_crs(cities) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+cities$size <- 15
+cities$color <- "#5b5847"
+cities$label <- cities$name
+cities$label_pos <- "e"
+
+map_br_sketchy <- roughsf::roughsf(ger,
+    title = "Sketchy Map of Brazil", caption = "drawn by @thais_fernandes",
+    title_font = "20px Pristina", font = "30px Pristina", caption_font = "15px Pristina",
+    roughness = 2, bowing = 1, simplification = 2,
+    width = 500, height = 600,
+     
+    )
+
+roughsf::save_roughsf(wait = 190,
+  rsf = map_br_sketchy,
+  file = "map_br_sketchy.png",
+  background = "#fcfdff"
+)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
